@@ -77,12 +77,11 @@ import random
 
 def generate_drivers(n: int, width: float, height: float) -> list[dict]:
     """
-    Generate n random drivers uniformly distributed within the given grid dimensions.
-    
-    Returns
-    -------
-    list[dict]
-        A list of driver dictionaries initialized with random positions and default parameters.
+    Generates 'n' random drivers within the given grid bounds.
+
+    Each driver is assigned a random (x, y) position uniformly distributed
+    within [0, width) and [0, height). The function returns a list of driver
+    dictionaries matching the same format as load_drivers().
     """
 
     drivers = []  # Liste som gemmer alle de genererede drivers.

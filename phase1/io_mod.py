@@ -72,3 +72,41 @@ def load_requests(path):
             requests.append(req)
 
     return requests
+
+import random
+
+def generate_drivers(n: int, width: float, height: float) -> list[dict]:
+    """
+    Generate n random drivers uniformly distributed within the given grid dimensions.
+    
+    Returns
+    -------
+    list[dict]
+        A list of driver dictionaries initialized with random positions and default parameters.
+    """
+
+    drivers = []  # Liste som gemmer alle de genererede drivers.
+
+    for i in range(n):
+        # Gemmer x- og y-koordinat tilfældigt i vores ønskede grid
+        x = random.uniform(0, width)
+        y = random.uniform(0, height)
+
+        # Driver dictionaries
+        driver = {
+            "id": i,          # Unique driver identifier
+            "x": x,           # Random x position
+            "y": y,           # Random y position
+            "vx": 0.0,        # Initial velocity (stationary)
+            "vy": 0.0,        # Initial velocity (stationary)
+            "speed": 1.0,     # Default constant speed
+            "tx": x,          # Initial target position same as current (idle)
+            "ty": y,
+            "target_id": None # No assigned request yet
+        }
+
+        # Tilføjer drivers til vores liste
+        drivers.append(driver)
+
+    return drivers
+

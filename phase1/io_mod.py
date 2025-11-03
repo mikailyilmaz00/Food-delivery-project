@@ -109,4 +109,31 @@ def generate_drivers(n: int, width: float, height: float) -> list[dict]:
         drivers.append(driver)
 
     return drivers
+import random
+
+def generate_requests(start_t, out_list, req_rate, width, height):
+    """
+    Generate new requests at a single time step and append to out_list.
+
+    Args:
+        start_t (int): Nuværende tidsskridt.
+        out_list (list):   Liste som nye requests tilføjes til.
+        req_rate (float):  Sandsynligheden for at genere en ny request (Skal være mellem 0.0 - 1.0).
+        width (float):     Bredden af gridded for pickup/dropout koodinaten.
+        height (float):    Højden af gidded for pickup/dropoff koordinaten.
+    """
+    if random.random() < req_rate: # Kører kun hvis random.random (tilfældigt tal mellem 0.0 - 1.0) er mindre end req_rate.
+        rid = len(out_list)  
+        request = {
+            "id": rid,
+            "px": random.uniform(0, width),
+            "py": random.uniform(0, height),
+            "dx": random.uniform(0, width),
+            "dy": random.uniform(0, height),
+            "t": start_t,
+            "t_wait": 0,
+            "status": "waiting",
+            "driver_id": None
+        }
+        out_list.append(request) # Tilføjer requesten til out_list.
 

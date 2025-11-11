@@ -20,7 +20,7 @@ def init_state(drivers, requests, timeout, rate, width, height):
     Returns
     -------
     dict
-        The complete state dictionary.
+        The complete state dictionary
     """
     return {
         "t": 0,                   # starttid

@@ -127,14 +127,24 @@ def simulate_step(state):
 
             # Driver becomes available again
             driver["target_id"] = None
-        
+            driver["tx"], driver["ty"] = driver["x"], driver["y"]
+            req["driver_id"] = None
 
-
-
+         # 6) Remove delivered requests from pending list
+        state["pending"] = [r for r in state["pending"] if r["status"] != "delivered"]
 
     # metrics for GUI/UI - "served", "expired" og "avg_wait" disse vlrdier skal implementeres og returnere metrics
 
+    metrics = {
+        "served": state["served"],
+        "expired": state["expired"],
+        "avg_wait": (
+            sum(state["served_waits"]) / len(state["served_waits"])
+            if state["served_waits"] else 0
+        )
+    }
 
+    return state, metrics
 
 
 
@@ -148,6 +158,23 @@ def move_driver(driver, target, speed=1.0):
     """
     Moves a driver toward a target position using a constant speed. 
     """
+tx, ty = target
+    x, y = driver["x"], driver["y"]
+
+    dx = tx - x
+    dy = ty - y
+    dist = math.sqrt(dx*dx + dy*dy)
+
+    if dist < 1e-6:
+        return
+
+    ux = dx / dist
+    uy = dy / dist
+
+    step = min(speed, dist)
+
+    driver["x"] += ux * step
+    driver["y"] += uy * step
 
 # close_enough: Returnerer True hvis chaufføren er tæt nok på målet.
 
@@ -158,7 +185,9 @@ def close_enough(driver, target, tol=0.5):
     """
     Returns True if driver is within a close radius of the target.
     """
-
+    dx = driver["x"] - target[0]
+    dy = driver["y"] - target[1]
+    return math.sqrt(dx*dx + dy*dy) <= tol
 
 
     # du må gerne rette/ændrer, hvis der er noget 

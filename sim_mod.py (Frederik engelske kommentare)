@@ -1,0 +1,153 @@
+def simulate_step(state):
+    """
+    Advances the simulation by 1 time unit.
+    """
+
+    # ---------------------------------------
+    # 1) Advance time
+    # ---------------------------------------
+    state["t"] += 1  # increase simulation timestamp by 1 minute
+
+    # ---------------------------------------
+    # 2) Generate new requests
+    # ---------------------------------------
+    generate_requests(
+        state["t"],          # current time
+        state["pending"],    # append new request to pending list
+        state["req_rate"],   # probability of generating a request
+        state["width"],      # grid width
+        state["height"]      # grid height
+    )
+
+    # ---------------------------------------
+    # 3) Expire old requests
+    # ---------------------------------------
+    for req in state["pending"]:
+        if req["status"] in ("waiting", "assigned"):  # only requests not yet delivered
+            if state["t"] - req["t"] > state["timeout"]:  # too much wait time?
+                req["status"] = "expired"
+                state["expired"] += 1
+
+                # If the expired request had a driver assigned…
+                if req["driver_id"] is not None:
+                    d = state["drivers"][req["driver_id"]]
+                    d["target_id"] = None  # free that driver again
+
+    # ---------------------------------------
+    # 4) Assign first waiting request to first free driver
+    # ---------------------------------------
+    for driver in state["drivers"]:
+        if driver["target_id"] is None:  # free driver?
+            for req in state["pending"]:
+                if req["status"] == "waiting":  # unassigned request found
+                    req["status"] = "assigned"
+                    req["driver_id"] = driver["id"]  # link request -> driver
+                    driver["target_id"] = req["id"]  # link driver -> request
+
+                    # driver moves toward pickup location
+                    driver["tx"], driver["ty"] = req["px"], req["py"]
+                    break  # stop after assigning one request
+
+    # ---------------------------------------
+    # 5) Move drivers and handle pickup/delivery
+    # ---------------------------------------
+    delivered_ids = []   # will store IDs of delivered requests
+
+    for driver in state["drivers"]:
+
+        if driver["target_id"] is None:  # driver is idle
+            continue
+
+        # Find the request this driver is handling
+        req = next((r for r in state["pending"] if r["id"] == driver["target_id"]), None)
+
+        if req is None:  # request no longer exists (rare safety case)
+            driver["target_id"] = None
+            continue
+
+        # Determine movement target (pickup or dropoff)
+        if req["status"] == "assigned":
+            target = (req["px"], req["py"])  # pickup location
+        else:
+            target = (req["dx"], req["dy"])  # delivery location
+
+        # Move driver one step toward target
+        move_driver(driver, target)
+
+        # ---------------------
+        # Pickup event
+        # ---------------------
+        if req["status"] == "assigned" and close_enough(driver, target):
+            req["status"] = "picked"             # pickup done
+            driver["tx"], driver["ty"] = req["dx"], req["dy"]  # move to delivery next
+
+        # ---------------------
+        # Delivery event
+        # ---------------------
+        elif req["status"] == "picked" and close_enough(driver, target):
+            req["status"] = "delivered"      # mark delivered
+            state["served"] += 1             # update counter
+            state["served_waits"].append(state["t"] - req["t"])  # record wait time
+            delivered_ids.append(req["id"])  # schedule for removal
+
+            driver["target_id"] = None                     # driver becomes free
+            driver["tx"], driver["ty"] = driver["x"], driver["y"]  # idle target = current pos
+            req["driver_id"] = None                        # detach driver from request
+
+    # ---------------------------------------
+    # 6) Remove delivered requests from list
+    # ---------------------------------------
+    if delivered_ids:
+        state["pending"] = [
+            r for r in state["pending"] if r["id"] not in delivered_ids
+        ]
+
+    # ---------------------------------------
+    # 7) Metrics
+    # ---------------------------------------
+    metrics = {
+        "served": state["served"],
+        "expired": state["expired"],
+        "avg_wait": (
+            sum(state["served_waits"]) / len(state["served_waits"])
+            if state["served_waits"] else 0
+        )
+    }
+
+    return state, metrics
+
+
+# ======================================================
+# Helpers — with inline comments
+# ======================================================
+
+def move_driver(driver, target, speed=2.0):
+    # target coordinates
+    tx, ty = target
+    x, y = driver["x"], driver["y"]
+
+    # compute direction vector
+    dx = tx - x
+    dy = ty - y
+    dist = math.sqrt(dx * dx + dy * dy)
+
+    if dist < 1e-6:  # already at target
+        return
+
+    # unit direction vector
+    ux = dx / dist
+    uy = dy / dist
+
+    # move at constant speed, but don’t overshoot
+    step = min(speed, dist)
+
+    # update position
+    driver["x"] += ux * step
+    driver["y"] += uy * step
+
+
+def close_enough(driver, target, tol=0.5):
+    # Euclidean distance check
+    dx = driver["x"] - target[0]
+    dy = driver["y"] - target[1]
+    return math.sqrt(dx * dx + dy * dy) <= tol

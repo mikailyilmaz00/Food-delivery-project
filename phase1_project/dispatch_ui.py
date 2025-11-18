@@ -52,7 +52,7 @@ Notes
   `run_app()` is called without arguments and is expected to construct
   a default backend internally, only for the teachers.
 """
-
+# import phase1
 from __future__ import annotations
 
 from typing import Optional, Dict, Callable, Tuple, Any
@@ -103,4 +103,10 @@ if __name__ == "__main__":
 
     main(_backend)
 
-    #additional code for the metrics' report
+    from phase1.popupWindow import popupWindow
+    
+
+    import os
+    os.chdir(os.path.dirname(__file__) or os.getcwd())
+    popupWindow()
+

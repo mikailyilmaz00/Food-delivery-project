@@ -1,3 +1,46 @@
+import math
+
+from phase1.io_mod import generate_requests
+
+def init_state(drivers, requests, timeout, rate, width, height):
+    """
+    Initializes the full simulation state as described in the project specification (section 4.2.2).
+
+    Parameters
+    ----------
+    drivers : list[dict]
+        List of driver dictionaries (from load_drivers or generate_drivers)
+    requests : list[dict]
+        List of request dictionaries (from load_requests or generate_requests)
+    timeout : int
+        Maximum waiting time before a request expires
+    rate : float
+        Request generation rate (requests per minute)
+    width : int
+        Width of the simulation grid
+    height : int
+        Height of the simulation grid
+
+    Returns
+    -------
+    dict
+        The complete state dictionary
+    """
+    return {
+        "t": 0,                   # start time
+        "drivers": drivers,       # chauffør-liste
+        "pending": requests,      # active orders
+        "future": [],             
+        "served": 0,              # count of served orders
+        "expired": 0,             # count of expired orders
+        "timeout": timeout,       # max. wait time
+        "served_waits": [],       # wait time for served orders
+        "req_rate": rate,         # orders pr. min. 
+        "width": width,
+        "height": height
+    }
+
+
 def simulate_step(state):
     """
     Advances the simulation by 1 time unit.
@@ -121,7 +164,7 @@ def simulate_step(state):
 # Helpers — with inline comments
 # ======================================================
 
-def move_driver(driver, target, speed=2.0):
+def move_driver(driver, target, speed=3.0):
     # target coordinates
     tx, ty = target
     x, y = driver["x"], driver["y"]

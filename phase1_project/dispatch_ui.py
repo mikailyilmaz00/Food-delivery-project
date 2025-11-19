@@ -104,9 +104,5 @@ if __name__ == "__main__":
     main(_backend)
 
     from phase1.popupWindow import popupWindow
-    
-
-    import os
-    os.chdir(os.path.dirname(__file__) or os.getcwd())
     popupWindow()
 

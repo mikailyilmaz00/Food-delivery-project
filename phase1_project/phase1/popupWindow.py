@@ -9,10 +9,10 @@ def popupWindow():
     state = init_state(
         drivers,
         requests,
-        timeout=50,
-        rate=0.2,
+        timeout=10,
+        rate=0.8,
         width=50,
-        height=30
+        height=40
     )
 
     served_hist = []
@@ -25,7 +25,9 @@ def popupWindow():
         expired_hist.append(metrics["expired"])
         avg_hist.append(metrics["avg_wait"])
 
+
     # popup shows after ending of simulation
+    plt.ylim(0, 300)
     plt.plot(served_hist, label="served")
     plt.plot(expired_hist, label="expired")
     plt.plot(avg_hist, label="avg_wait" )

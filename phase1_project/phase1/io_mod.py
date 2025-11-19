@@ -5,6 +5,10 @@ def load_drivers(path):
     Skips lines starting with '#'.
     Returns a list of driver dictionaries in the format required by the GUI.
     """
+    import os
+    if not os.path.isabs(path):
+        path = os.path.join(os.path.dirname(__file__), path)
+    
     drivers = []
     with open(path, "r") as f:    # Python åbner filen 
         for line in f:            # Indlæser linje for linje
@@ -39,8 +43,12 @@ def load_requests(path):
     Reads order data (requests) from a CSV file.
     The format is: time, pickup_x, pickup_y, delivery_x, delivery_y
     Comment lines (starting with '#') are skipped.
-    Returns a list of request dictionaries in the project’s required format.
+    Returns a list of request dictionaries in the project's required format.
     """
+    import os
+    # Resolve relative paths against this module's folder (phase1/)
+    if not os.path.isabs(path):
+        path = os.path.join(os.path.dirname(__file__), path)
 
     requests = []  # alle ordres gemmes her
 
